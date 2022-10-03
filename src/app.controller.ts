@@ -16,7 +16,7 @@ export class AppController {
   }
 
   @Get('prices')
-  async getCoinPrices(@Query('coins') coins: string) {
+  async getCoinPrices(@Query('coins') coins: string[]) {
     return this.apiService.getCoinPrices(coins);
   }
 

@@ -4,7 +4,7 @@ import { AxiosRequestConfig } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import * as Bluebird from 'bluebird';
 
-import { CoinPrice, CoinPrices } from '../interfaces';
+import { Coin, CoinPrice, CoinPrices } from '../interfaces';
 
 export const ALLOWED_COINS = ['bitcoin', 'ethereum', 'ripple', 'tether'];
 
@@ -12,11 +12,16 @@ export const ALLOWED_CURRENCIES = ['usd', 'eur', 'uah'];
 
 @Injectable()
 export class ApiService {
+  private coinsListCache: Coin[] | null = null;
+
   constructor(private readonly httpService: HttpService) {}
 
-  async getCoinsList(): Promise<string[]> {
-    const data = await this.request({ url: 'coins/list' });
-    return data.filter(({ id }) => ALLOWED_COINS.includes(id));
+  async getCoinsList(): Promise<Coin[]> {
+    if (!this.coinsListCache) {
+      const data = await this.request({ url: 'coins/list' });
+      this.coinsListCache = data.filter(({ id }) => ALLOWED_COINS.includes(id));
+    }
+    return this.coinsListCache;
   }
 
   async getFiatCurrencies(): Promise<string[]> {
@@ -27,11 +32,11 @@ export class ApiService {
     return this.request({ url: 'simple/supported_vs_currencies' });
   }
 
-  async getCoinPrices(coins: string): Promise<CoinPrices[]> {
+  async getCoinPrices(coins: string[]): Promise<CoinPrices[]> {
     const data = await this.request({
       url: 'simple/price',
       params: {
-        ids: coins,
+        ids: coins.join(),
         vs_currencies: ALLOWED_CURRENCIES.join(','),
       },
     });

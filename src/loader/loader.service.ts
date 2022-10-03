@@ -16,8 +16,6 @@ export class LoaderService {
     private readonly apiService: ApiService,
   ) {
     this.loadData();
-    //this.list();
-    //this.priceRepository.delete({});
   }
 
   private async loadData(startDate?: moment.Moment) {
@@ -25,16 +23,19 @@ export class LoaderService {
     const toInsert: PriceEntity[] = [];
     for (const coin of ALLOWED_COINS) {
       console.log(`Loading ${date}, ${coin}`);
-      const { price } = await this.apiService.getHistoricalData(
+      const prices = await this.apiService.getHistoricalData(
         coin,
         date.format('DD-MM-YYYY'),
       );
-      for (const [currency, value] of Object.entries(price)) {
+      const base = {
+        coin,
+        date: date.toDate(),
+      };
+      for (const { currency, price } of prices) {
         toInsert.push({
-          coin,
-          date: date.toDate(),
+          ...base,
           currency,
-          price: value as string,
+          price: price.toString(),
         });
       }
     }
