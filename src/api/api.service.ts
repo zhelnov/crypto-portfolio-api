@@ -54,7 +54,10 @@ export class ApiService {
     return result;
   }
 
-  async getHistoricalData(coin: string, date: string): Promise<CoinPrice[]> {
+  async getHistoricalData(
+    coin: string,
+    date: string,
+  ): Promise<CoinPrice[] | null> {
     const data = await this.request({
       url: `coins/${coin}/history`,
       params: {
@@ -62,6 +65,9 @@ export class ApiService {
         date,
       },
     });
+    if (!data?.market_data?.current_price) {
+      return null;
+    }
     const result: CoinPrice[] = [];
     for (const currency of ALLOWED_CURRENCIES) {
       result.push({

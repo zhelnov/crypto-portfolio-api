@@ -7,5 +7,6 @@ import { LoaderService } from './loader.service';
   imports: [ApiModule],
   controllers: [],
   providers: [LoaderService],
+  exports: [LoaderService],
 })
 export class LoaderModule {}

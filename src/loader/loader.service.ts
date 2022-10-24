@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 
 import { ALLOWED_COINS, ApiService } from '../api';
 import { PriceEntity } from '../entities/price.entity';
@@ -18,8 +18,38 @@ export class LoaderService {
     this.loadData();
   }
 
+  async getLastWeekPrices() {
+    const from = moment().subtract(1, 'week').toDate();
+    const found = await this.priceRepository.find({
+      where: {
+        date: MoreThan(from),
+        currency: 'usd',
+      },
+    });
+    const map = new Map<number, Map<string, string>>();
+    for (const item of found) {
+      const key = item.date.getTime();
+      if (!map.has(key)) {
+        map.set(key, new Map());
+      }
+      map.get(key).set(item.coin, item.price);
+    }
+    return Array.from(map.entries()).map(([timestamp, prices]) => {
+      return {
+        timestamp,
+        prices: Array.from(prices.entries()).map(([coin, price]) => {
+          return { coin, price };
+        }),
+      };
+    });
+  }
+
   private async loadData(startDate?: moment.Moment) {
     const date = startDate || (await this.getStartDate());
+    if (!date) {
+      setTimeout(() => this.loadData(), 60000);
+      return;
+    }
     const toInsert: PriceEntity[] = [];
     for (const coin of ALLOWED_COINS) {
       console.log(`Loading ${date}, ${coin}`);
@@ -27,6 +57,9 @@ export class LoaderService {
         coin,
         date.format('DD-MM-YYYY'),
       );
+      if (!prices) {
+        continue;
+      }
       const base = {
         coin,
         date: date.toDate(),
@@ -62,7 +95,12 @@ export class LoaderService {
       .execute();
     if (lastLoaded?.max) {
       console.log(`Got max date ${lastLoaded.max}`);
-      return moment(lastLoaded.max);
+      const toMoment = moment(lastLoaded.max);
+      if (toMoment.isSameOrAfter(moment(), 'day')) {
+        console.log('Nothing to sync');
+        return null;
+      }
+      return toMoment;
     }
     return moment(START_DATE, 'DD-MM-YYYY');
   }

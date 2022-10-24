@@ -1,9 +1,13 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiService } from './api';
+import { LoaderService } from './loader/loader.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly loaderService: LoaderService,
+  ) {}
 
   @Get('coins')
   async getSupportedCoins() {
@@ -26,5 +30,10 @@ export class AppController {
     @Query('date') date: string,
   ) {
     return this.apiService.getHistoricalData(coin, date);
+  }
+
+  @Get('week')
+  async getWeekPrices() {
+    return this.loaderService.getLastWeekPrices();
   }
 }
