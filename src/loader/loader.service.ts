@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
+import { ChartData } from 'src/interfaces';
 import { MoreThan, Repository } from 'typeorm';
 
 import { ALLOWED_COINS, ApiService } from '../api';
@@ -18,7 +19,7 @@ export class LoaderService {
     this.loadData();
   }
 
-  async getLastWeekPrices() {
+  async getLastWeekPrices(): Promise<ChartData[]> {
     const from = moment().subtract(1, 'week').toDate();
     const found = await this.priceRepository.find({
       where: {

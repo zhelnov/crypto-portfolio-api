@@ -9,7 +9,17 @@ export interface CoinPrice {
   price: number;
 }
 
+export interface CoinChartPrice {
+  coin: string;
+  price: string;
+}
+
 export interface CoinPrices {
   coin: string;
   prices: CoinPrice[];
+}
+
+export interface ChartData {
+  timestamp: number;
+  prices: CoinChartPrice[];
 }
